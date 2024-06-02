@@ -1,50 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import "./card.css";
+import { firestore } from "./firebase";
+import { useParams } from "react-router-dom";
 
 const ChatContent = () => {
+  const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [input2, setInput2] = useState("");
 
+  useEffect(() => {
+    const unsubscribe = firestore
+      .collection("chats")
+      .doc(chatId)
+      .collection("messages")
+      .orderBy("time")
+      .onSnapshot((snapshot) => {
+        const loadedMessages = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setMessages(loadedMessages);
+      });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [chatId]);
+
   const handleSend = () => {
     if (input.trim()) {
-      setMessages([
-        ...messages,
-        {
-          text: input,
-          id: messages.length,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          sender: "user",
-        },
-      ]);
+      const message = {
+        text: input,
+        time: new Date().toISOString(),
+        sender: "user",
+      };
+      firestore
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages")
+        .add(message);
       setInput("");
     }
   };
+
   const handleSend2 = () => {
     if (input2.trim()) {
-      setMessages([
-        ...messages,
-        {
-          text: input2,
-          id: messages.length,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          sender: "user2",
-        },
-      ]);
+      const message = {
+        text: input2,
+        time: new Date().toISOString(),
+        sender: "user2",
+      };
+      firestore
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages")
+        .add(message);
       setInput2("");
     }
   };
 
   return (
-    <div className="flex flex-col h-screen p-40 bg-gray-100">
-      <div className="flex-grow border rounded-lg overflow-hidden shadow-lg bg-white flex flex-col">
+    <div className="flex flex-col h-screen p-40">
+      <div className="flex-grow border rounded-lg overflow-hidden shadow-lg card flex flex-col">
         <div className="bg-gray-200 p-4 border-b">
-          <h1 className="text-lg font-semibold">chat1</h1>
+          <h1 className="text-lg font-semibold">Chat {chatId}</h1>
         </div>
         <div className="p-4 flex-grow overflow-auto">
           {messages.map((message) => (
@@ -61,7 +81,10 @@ const ChatContent = () => {
               >
                 <p className="text-sm break-words">{message.text}</p>
                 <p className="text-xs text-gray-500 text-right mt-1">
-                  {message.time}
+                  {new Date(message.time).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>

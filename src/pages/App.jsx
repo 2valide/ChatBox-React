@@ -1,20 +1,19 @@
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
-
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import ChatContent from "../components/main/chatContent";
 import SideBar from "../components/sidebar/sideBar";
 
 function App() {
   return (
-    <>
+    <Router>
       <div className="flex h-screen border-2 border-black">
         <SideBar />
         <div className="w-full">
-          <ChatContent />
+          <Routes>
+            <Route path="/chatbox/:chatId" element={<ChatContent />} />
+          </Routes>
         </div>
       </div>
-    </>
+    </Router>
   );
 }
 
